@@ -1,0 +1,10 @@
+language: php
+
+php:
+  - 5.6
+
+script:
+    - composer install
+    - ./vendor/bin/phpunit -c config/phpunit.xml
+after_script:
+    - ./vendor/bin/coveralls -v
