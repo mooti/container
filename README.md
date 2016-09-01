@@ -116,7 +116,69 @@ $app             = new App();
 
 $container->registerServices($serviceProvider);
 $app->setContainer($container);
+
+// Should log "Hello World"
 $app->run();
 ```
 
-This repository is not intendedd for creating mocks for testing. In order to do that, look at [mooti/factory](https://github.com/mooti/factory)
+The ContainerAware trait extends functionality from [mooti/factory](https://github.com/mooti/factory). You can instantiate an object using the method `createNew` and it will try to inject the container into the object if it users the ContainerAware trait.
+
+```
+use Mooti\Container\Container;
+use Mooti\Container\ContainerAware;
+use Mooti\Container\ServiceProvider\ServiceProviderInterface;
+
+class FooBar
+{
+    use ContainerAware;
+
+    private $foo;
+    private $bar;
+
+    public function __construct($foo, $bar)
+    {
+        $this->foo = $foo;
+        $this->bar = $bar;
+    }
+
+    public function logMessage()
+    {
+        $config  = $this->get('config');
+        $message = $this->get('message');
+
+        $logger->alert($this->foo . ' ' .  $this->bar . ' ' . $message);
+    }
+}
+
+class App
+{
+    use ContainerAware;
+
+    public function run()
+    {
+        $fooBar = $this->createNew(FooBar::class, ['test 1', 'test 2']);
+        $fooBar->logMessage();
+    }
+}
+
+class ServiceProvider implements ServiceProviderInterface
+{
+    public function getServices()
+    {
+        return [
+            'logger'  => function () { return new Logger();},
+            'message' => 'Hello World'},
+        ];
+    }
+}
+
+$container       = new Container();
+$serviceProvider = new ServiceProvider::class;
+$app             = new App();
+
+$container->registerServices($serviceProvider);
+$app->setContainer($container);
+
+// Should log "test 1 test 2 Hello World"
+$app->run();
+```
